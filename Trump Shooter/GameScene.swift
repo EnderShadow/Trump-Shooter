@@ -16,9 +16,9 @@ class GameScene: SKScene
     
     let player = SKSpriteNode(imageNamed: "trump")
     let whitehouse = SKSpriteNode(imageNamed: "whitehouse")
+    let sky = SKSpriteNode(imageNamed: "sky")
     
-    let enemySprites = ["enemy1", "enemy2", "enemy3", "enemy4"]
-    let enemyScales : [(CGFloat, CGFloat)] = [(0.08, 0.08), (0.07, 0.07), (0.05, 0.05), (0.08, 0.08)]
+    let enemySprites = ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5"]
     var enemies : [SKSpriteNode] = []
     
     let motionManager = CMMotionManager()
@@ -49,17 +49,29 @@ class GameScene: SKScene
     
     override func didMoveToView(view: SKView)
     {
+        var scale = self.frame.width / whitehouse.frame.width * 1.05
         whitehouse.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMinY(self.frame) + CGRectGetHeight(self.frame) / 12)
-        whitehouse.xScale = 0.4
-        whitehouse.yScale = 0.4
+        whitehouse.xScale = scale
+        whitehouse.yScale = scale
         if !children.contains(whitehouse)
         {
             self.addChild(whitehouse)
         }
         
+        scale = self.frame.height / sky.frame.height
+        sky.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidY(self.frame))
+        sky.xScale = scale
+        sky.yScale = scale
+        sky.zPosition = -10
+        if !children.contains(sky)
+        {
+            self.addChild(sky)
+        }
+        
+        scale = self.frame.width / player.frame.width * 0.25
         player.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidY(whitehouse.frame) + CGRectGetHeight(self.frame) / 10)
-        player.xScale = 0.125
-        player.yScale = 0.125
+        player.xScale = scale
+        player.yScale = scale
         player.zPosition = 2
         player.physicsBody = SKPhysicsBody(rectangleOfSize: player.frame.size)
         player.physicsBody!.dynamic = true
@@ -115,9 +127,10 @@ class GameScene: SKScene
         for _ in touches
         {
             let sprite = SKSpriteNode(imageNamed:"money")
+            let scale = self.frame.height / sprite.frame.height * 0.055
             
-            sprite.xScale = 0.05
-            sprite.yScale = 0.05
+            sprite.xScale = scale//0.05
+            sprite.yScale = scale//0.05
             sprite.position = player.position
             sprite.position.x -= player.frame.width / 8
             sprite.position.y += player.frame.height / 2 + sprite.frame.height / 2.5
@@ -182,6 +195,7 @@ class GameScene: SKScene
                     if !self.frame.contains(child.frame) && !self.frame.intersects(child.frame)
                     {
                         child.runAction(SKAction.removeFromParent())
+                        score -= 1
                     }
                 }
                 else if child.description.containsString("enemy") && child.position.y < player.position.y - player.frame.height / 2
@@ -196,7 +210,7 @@ class GameScene: SKScene
                         self.paused = false
                     })
                     
-                    let cancel = UIAlertAction(title: "Cancel", style: .Default, handler: {action in
+                    let cancel = UIAlertAction(title: "Main Menu", style: .Default, handler: {action in
                         self.controller?.performSegueWithIdentifier("mainScreenSegue", sender: self)
                     })
                     
@@ -210,7 +224,7 @@ class GameScene: SKScene
         }
         
         spawn += deltaTime
-        if spawn >= SPAWN_THRESHOLD / (Double(1 + numSpawns * numSpawns))
+        while spawn >= SPAWN_THRESHOLD / Double(1 + numSpawns * numSpawns * numSpawns)
         {
             spawn -= SPAWN_THRESHOLD
             
@@ -235,8 +249,9 @@ class GameScene: SKScene
     {
         let index = Int(arc4random_uniform(UInt32(enemySprites.count)))
         let sprite = SKSpriteNode(imageNamed: enemySprites[index])
-        sprite.xScale = enemyScales[index].0
-        sprite.yScale = enemyScales[index].1
+        let scale = self.frame.height / max(sprite.frame.width, sprite.frame.height) * 0.1
+        sprite.xScale = scale
+        sprite.yScale = scale
         
         return sprite
     }
